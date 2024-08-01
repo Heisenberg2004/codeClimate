@@ -1,31 +1,42 @@
 public class OrderProcessor {
 
     public void processOrder(Order order) {
-        if (order != null) {
-            if (order.isRushOrder()) {
-                if (order.getTotalPrice() > 1000) {
-                    applyDiscount(order, 0.1);
-                    order.setStatus("Processed with rush and high value discount");
-                } else {
-                    order.setStatus("Processed with rush");
-                }
-            } else {
-                if (order.getTotalPrice() > 1000) {
-                    applyDiscount(order, 0.05);
-                    order.setStatus("Processed with high value discount");
-                } else {
-                    order.setStatus("Processed normally");
-                }
-            }
-
-            if (order.getItems().size() > 10) {
-                order.setStatus(order.getStatus() + " and bulk order");
-            }
-
-            sendConfirmationEmail(order);
-        } else {
+        if (order == null) {
             System.out.println("Order is null, cannot process");
+            return;
         }
+
+        applyRelevantDiscount(order);
+        updateOrderStatus(order);
+
+        if (isBulkOrder(order)) {
+            order.setStatus(order.getStatus() + " and bulk order");
+        }
+
+        sendConfirmationEmail(order);
+    }
+
+    private void applyRelevantDiscount(Order order) {
+        if (order.getTotalPrice() > 1000) {
+            double discountRate = order.isRushOrder() ? 0.1 : 0.05;
+            applyDiscount(order, discountRate);
+        }
+    }
+
+    private void updateOrderStatus(Order order) {
+        if (order.isRushOrder()) {
+            order.setStatus(order.getTotalPrice() > 1000 ? 
+                "Processed with rush and high value discount" : 
+                "Processed with rush");
+        } else {
+            order.setStatus(order.getTotalPrice() > 1000 ? 
+                "Processed with high value discount" : 
+                "Processed normally");
+        }
+    }
+
+    private boolean isBulkOrder(Order order) {
+        return order.getItems().size() > 10;
     }
 
     private void applyDiscount(Order order, double discountRate) {
